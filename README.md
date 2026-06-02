@@ -65,11 +65,28 @@ sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
 * WireGuard installed and configured locally
 
 ### Installation
+### Ubuntu
 ```bash
 git clone [https://github.com/klauscam/bastionroute.git](https://github.com/klauscam/bastionroute.git)
 cd bastionroute
 go build -o bastionroute-shim main.go
+go build -o bastionroute-relay main.go
 ```
+
+### OpenWrt
+```bash
+git clone [https://github.com/klauscam/bastionroute.git](https://github.com/klauscam/bastionroute.git)
+cd bastionroute
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bastionroute-shim
+```
+
+### Termux (Android)
+```bash
+git clone [https://github.com/klauscam/bastionroute.git](https://github.com/klauscam/bastionroute.git)
+cd bastionroute
+GO_ENABLED=0 GOOS=android GOARCH=arm64 go build -o bastionroute-shim
+```
+
 
 ### Running the Server-Side Control Plane
 Run the shim in server mode behind your private infrastructure to establish the outbound control link to the public relay broker:
