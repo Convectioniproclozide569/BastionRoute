@@ -91,7 +91,7 @@ Run the shim in client mode on your remote device. The user-space supervisor loo
 
 | System Layer | Core Technical Mechanism | Security & Performance Objective |
 | :--- | :--- | :--- |
-| **Transport Wrapper** | Noise Protocol over TLS 1.3 WebSockets | Defeats Deep Packet Inspection (DPI) blocks. |
+| **Transport Wrapper** | Noise Protocol over TLS 1.3 WebSockets | Provides uninterrupted network access through common port TCP 443. |
 | **Perimeter Hardening** | Outbound-Initiated Socket Brokerage | Eradicates public-facing IPv4/IPv6 target signatures. |
 | **Control Keep-Alives** | Layer-7 Ping/Pong Heartbeat Interception | Bypasses restrictive carrier timeouts on silent lines. |
 | **Resilience Supervisor** | Decoupled Socket Loop Recovery | Prevents local tunnel drops during physical WAN handoffs. |
