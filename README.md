@@ -65,7 +65,7 @@ sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
 * `make` utility installed (standard on Linux/macOS)
 * WireGuard installed and configured locally
 
-### Installation & Compilation
+### Installation & Compilation (Ubuntu)
 
 BastionRoute utilizes a standard multi-binary `cmd/` architecture. The compilation step automatically leverages the `Makefile` to pull down required dependencies (including `github.com/gorilla/websocket`) and verify the Go environment. 
 
@@ -95,17 +95,17 @@ make clean
 Deploy the relay binary on a public-facing cloud server or localized DMZ boundary. This acts as the zero-knowledge broker mapping atomic routing tags in memory:
 
 ```
-./bin/bastionroute-relay --port=443 --auth-token="your-secure-cluster-token"
+./bin/bastionroute-relay --port=8080
 ```
 
-### 2. Running the Server-Side Shim (Substation / Legacy Asset Gateway)
+### 2. Running the Server-Side Shim (WireGuard Server interface)
 Execute the shim in server mode behind your restricted infrastructure to initiate the outbound-only TLS 1.3 WebSocket connection back to the public relay broker:
 
 ```
 ./bin/bastionroute-shim --wg-role=server --uri="wss://relay.yourdomain.com" --room="secure-room-id" --wg-ip="127.0.0.1" --wg-port=51820
 ```
 
-### 3. Running the Client-Side User Pipeline (Engineering Workstation)
+### 3. Running the Client-Side Shim (WireGuard Peer interface)
 Execute the shim in client mode on your remote device. The internal user-space supervisor loop will automatically spin up a local interface to securely bridge your native WireGuard application:
 
 ```
