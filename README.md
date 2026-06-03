@@ -1,20 +1,25 @@
 # BastionRoute (v0.1.0-alpha)
 
-> **An outbound-initiated WebSocket orchestrator for WireGuard that operates with zero-inbound port architecture.**
+> **An outbound-initiated WebSocket relay fabric for binary streams that operates with zero-inbound port architecture.**
 
-BastionRoute is an outbound-only overlay network designed to securely route WireGuard traffic over a stateful Layer-7 WebSocket transport.
+BastionRoute is an outbound-only binary stream relay fabric designed to route binary traffic over a stateful Layer-7 WebSocket transport.
 
-By initiating all data pipelines via outbound-only connections, BastionRoute requires no open port exposure while preserving WireGuard end-to-end encrypted payloads. It operates as a transport encapsulation layer only.
+By initiating all data pipelines via outbound-only connections, BastionRoute requires no open port exposure and does not interpret payload semantics. It only provides deterministic routing of binary streams between identified peers over an outbound WebSocket relay fabric. BastionRoute is a transport-agnostic relay fabric for routing binary streams between outbound-connected peers.
 
 ---
 
 ## ⚡ Architectural Core
 
-BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to optimize transport efficiency and preserve cryptographic isolation. BastionRoute is oblivious of the data being passed through:
+BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to optimize transport efficiency and preserve payload as-is.
 
 * **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a stateless Cloud Relay. It does not require inbound ports under normal deployment configurations.
-* **Double-Wrapper Encapsulation:** WireGuard payload is transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). Wireguard Encryption is never altered. BastionRoute does not have access to WireGuard private keys and does not inspect or decrypt WireGuard payload data. BastionRoute does only one thing, provides an outbound route over websockets.
-* **Stateless Cloud Brokerage:** The public cloud relay functions as a relay broker with no knowledge of payload. It routes traffic based entirely on atomic routing tags in memory. WireGuard payload contents remain encrypted under WireGuard's security model even if a relay is compromised. Relay operators may still observe transport metadata such as connection timing, identifiers, and traffic volume.
+* **Double-Wrapper Encapsulation:** The binary payload is transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). The payload is never altered. BastionRoute does only one thing, provides an outbound route over websockets.
+* **Stateless Cloud Brokerage:** The public cloud relay functions as a relay broker with no knowledge of payload. It routes traffic based entirely on http path routing in memory. The payload contents injested in the architecture, remain unaltered throughout its lifecycle.
+
+
+---
+
+## (Example 1) WireGuard Network over BastionRoute
 
 ---
 
@@ -74,7 +79,6 @@ sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
 ### Prerequisites
 * **Go 1.21+ compiler toolchain**
 * `make` utility installed (standard on Linux/macOS)
-* WireGuard installed and configured locally
 
 ### Installation & Compilation (Ubuntu)
 
@@ -109,14 +113,14 @@ Deploy the relay binary on a public-facing cloud server or localized DMZ boundar
 ./bin/bastionroute-relay --port=8080
 ```
 
-### 2. Running the Server-Side Shim (WireGuard Server interface)
+### 2. Running the Server-Side Shim (Server interface)
 Execute the shim in server mode behind your restricted infrastructure to initiate the outbound-only WebSocket connection back to the public relay broker:
 
 ```
 ./bin/bastionroute-shim --wg-role=server --uri="wss://relay.yourdomain.com" --room="secure-room-id" --wg-ip="127.0.0.1" --wg-port=51820
 ```
 
-### 3. Running the Client-Side Shim (WireGuard Peer interface)
+### 3. Running the Client-Side Shim (Peer interface)
 Execute the shim in client mode on your remote device. The internal user-space supervisor loop will automatically spin up a local interface to securely bridge your native WireGuard application:
 
 ```
@@ -154,7 +158,7 @@ Run the shim in client mode on your remote device. The user-space supervisor loo
 
 ---
 
-## Security Model
+## Security Model (for WireGuard example)
 
 ### BastionRoute inherits security properties from WireGuard. Specifically:
 
@@ -171,7 +175,7 @@ This system does not provide anonymity guarantees. Traffic metadata such as timi
 ## Security Notice
 
 BastionRoute provides transport relaying only.
-Authentication, authorization, encryption, and access control remain the responsibility of the underlying WireGuard configuration and deployment.
+Authentication, authorization, encryption, and access control remain the responsibility of the underlying data initiator configuration and deployment.
 
 ## Experimental Status
 
