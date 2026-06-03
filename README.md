@@ -104,7 +104,7 @@ Run the shim in client mode on your remote device. The user-space supervisor loo
 
 ---
 
-## (Example 1) WireGuard Network over BastionRoute
+## (Usage Example) WireGuard Network over BastionRoute
 
 ---
 
@@ -171,6 +171,25 @@ sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
 ### Threat Considerations
 
 This system does not provide anonymity guarantees. Traffic metadata such as timing, volume, and connection relationships may still be observable at the transport layer.
+
+---
+
+## Example Applications
+
+BastionRoute is payload agnostic and can transport arbitrary binary streams between connected peers.
+
+Potential applications include:
+
+* WireGuard VPN transport
+* Generic UDP stream transport
+* Binary message buses
+* RPC transports
+* Telemetry and sensor streams
+* Multiplayer game state synchronization
+* File transfer pipelines
+* Custom application protocols
+
+No relay modifications are required. Only endpoint payload handling changes.
 
 ---
 
