@@ -2,7 +2,7 @@
 
 > **An outbound-initiated WebSocket orchestrator for WireGuard that operates with zero-inbound port architecture.**
 
-BastionRoute is a zero-trust Layer-3 overlay network designed to securely route WireGuard traffic over a stateful Layer-7 WebSocket transport.
+BastionRoute is an outbound-only overlay network designed to securely route WireGuard traffic over a stateful Layer-7 WebSocket transport.
 
 By initiating all data pipelines via outbound-only connections, BastionRoute requires no open port exposure while preserving WireGuard end-to-end encrypted payloads. It operates as a transport encapsulation layer only.
 
@@ -12,9 +12,9 @@ By initiating all data pipelines via outbound-only connections, BastionRoute req
 
 BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to optimize transport efficiency and preserve cryptographic isolation. BastionRoute is oblivious of the data being passed through:
 
-* **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a stateless Cloud Relay. Does not require inbound ports under normal deployment configurations.
-* **Double-Wrapper Encapsulation:** WireGuard payload is transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). Wireguard Encryption is never altered. BastionRoute has zero knowlegde of the data, private keys, and inner networking. BastionRoute does only one thing, provides an outbound route over websockets.
-* **Stateless Cloud Brokerage:** The public cloud relay functions as a zero-knowledge, blind broker. It routes traffic based entirely on atomic routing tags in memory, removing any persistent database or state synchronization requirements. If the relay gets compromised, data remains inaccessable due to the end-to-end Wireguard encryption. 
+* **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a stateless Cloud Relay. It does not require inbound ports under normal deployment configurations.
+* **Double-Wrapper Encapsulation:** WireGuard payload is transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). Wireguard Encryption is never altered. BastionRoute has zero knowlegde of the payload data, private keys, and inner networking. BastionRoute does only one thing, provides an outbound route over websockets.
+* **Stateless Cloud Brokerage:** The public cloud relay functions as a relay broker with no knowledge of payload. It routes traffic based entirely on atomic routing tags in memory. WireGuard payload contents remain protected by WireGuard encryption even if the relay is compromised. Relay operators may still observe transport metadata such as connection timing, identifiers, and traffic volume.
 
 ---
 
