@@ -12,9 +12,9 @@ By initiating all data pipelines via outbound-only connections, BastionRoute req
 
 BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to optimize transport efficiency and preserve payload as-is.
 
-* **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a stateless Cloud Relay. It does not require inbound ports under normal deployment configurations.
+* **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a Cloud Relay. It does not require inbound ports under normal deployment configurations.
 * **Double-Wrapper Encapsulation:** The binary payload is transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). The payload is never altered. BastionRoute does only one thing, provides an outbound route over websockets.
-* **Stateless Cloud Brokerage:** The public cloud relay functions as a relay broker with no knowledge of payload. It routes traffic based entirely on http path routing in memory. The payload contents injested in the architecture, remain unaltered throughout its lifecycle.
+* **Cloud Brokerage:** The public cloud relay functions as a relay broker with no knowledge of payload. It routes traffic based entirely on http path routing in memory. The payload contents injested in the architecture, remain unaltered throughout its lifecycle.
 ---
 
 ## 📦 Deployment Mechanics
@@ -49,7 +49,7 @@ make clean
 
 ## 🚀 Execution Guide
 
-### 1. Running the Central Stateless Relay
+### 1. Running the Relay
 Deploy the relay binary on a public-facing cloud server or localized DMZ boundary. This acts as the zero-knowledge broker mapping atomic routing tags in memory:
 
 ```
