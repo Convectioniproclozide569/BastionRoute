@@ -10,12 +10,12 @@ By initiating all data pipelines via outbound-only connections, BastionRoute com
 
 ## ⚡ Architectural Core
 
-BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to optimize transport efficiency and preserve cryptographic isolation:
+BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to optimize transport efficiency and preserve cryptographic isolation. BastionRoute is oblivious of the data being passed through:
 
 * **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a stateless Cloud Relay. No ingress ports are ever opened on your local perimeter.
-* **Double-Wrapper Encapsulation:** Layer-3 Noise-protocol frames (WireGuard UDP) are transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended).
-* **Stateless Cloud Brokerage:** The public cloud relay functions as a zero-knowledge, blind broker. It routes traffic based entirely on atomic routing tags in memory, removing any persistent database or state synchronization requirements.
-* **Anti-Fragile Lifecycle Supervision:** An integrated, infinite supervisor loop guarantees self-healing resilience. If a network socket collapses due to carrier routing switches, the shim cleanly drains user-space allocations, safeguards local interface continuity, and initiates an immediate redial sequence. ("Almost always" works)
+* **Double-Wrapper Encapsulation:** Layer-3 Noise-protocol frames (WireGuard UDP) are transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). Wireguard Encryption is never altered. BastionRoute has zero knowlegde of the data, private keys, and inner networking. BastionRoute does only one thing, provides an outbound route over websockets.
+* **Stateless Cloud Brokerage:** The public cloud relay functions as a zero-knowledge, blind broker. It routes traffic based entirely on atomic routing tags in memory, removing any persistent database or state synchronization requirements. If the relay gets compromised, data remains inaccessable due to the end-to-end Wireguard encryption. 
+
 
 ---
 
