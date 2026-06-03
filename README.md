@@ -20,7 +20,7 @@ BastionRoute leverages a decoupled, multi-shim architecture that separates the d
 
 ## Architectural Diagram
 
-![Architectural Diagram](images/network_diagram.png)
+![Architectural Diagram](images/arch_diagram.png)
 
 ---
 
