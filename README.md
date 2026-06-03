@@ -13,8 +13,10 @@ By initiating all data pipelines via outbound-only connections, BastionRoute req
 BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to optimize transport efficiency and preserve payload as-is.
 
 * **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a Cloud Relay. It does not require inbound ports under normal deployment configurations.
-* **Double-Wrapper Encapsulation:** The binary payload is transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). The payload is never altered. BastionRoute does only one thing, provides an outbound route over websockets.
-* **Cloud Brokerage:** The public cloud relay functions as a relay broker with no knowledge of payload. It routes traffic based entirely on http path routing in memory. The payload contents injested in the architecture, remain unaltered throughout its lifecycle.
+* **Double-Wrapper Encapsulation:** The binary payload is transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). The payload is never altered. BastionRoute performs a single function: routing binary streams between outbound-connected peers over WebSocket transports.
+* **Cloud Brokerage:** The public cloud relay functions as a payload-agnostic relay broker and does not interpret application payload semantics. It routes traffic using room and peer identifiers established during connection setup and maintained in transient memory structures. The payload contents injested in the architecture, remain unaltered throughout its lifecycle.
+
+BastionRoute intentionally does not define encryption, authentication, authorization, payload schemas, or application semantics. These responsibilities remain with the applications utilizing the relay fabric.
 ---
 
 ## 📦 Deployment Mechanics
@@ -50,7 +52,7 @@ make clean
 ## 🚀 Execution Guide
 
 ### 1. Running the Relay
-Deploy the relay binary on a public-facing cloud server or localized DMZ boundary. This acts as the zero-knowledge broker mapping atomic routing tags in memory:
+Deploy the relay binary on a public-facing cloud server or localized DMZ boundary. This acts as a payload-agnostic relay broker that maintains transient routing state in memory:
 
 ```
 ./bin/bastionroute-relay --port=8080
@@ -101,6 +103,22 @@ Run the shim in client mode on your remote device. The user-space supervisor loo
 
 ---
 
+## Example Applications
+
+BastionRoute is payload agnostic and can transport arbitrary binary streams between connected peers.
+
+Potential applications include:
+
+* WireGuard VPN transport
+* Generic UDP stream transport
+* Binary message buses
+* RPC transports
+* Telemetry and sensor streams
+* Multiplayer game state synchronization
+* File transfer pipelines
+* Custom application protocols
+
+No relay modifications are required. Only endpoint payload handling changes.
 
 ---
 
@@ -171,25 +189,6 @@ sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
 ### Threat Considerations
 
 This system does not provide anonymity guarantees. Traffic metadata such as timing, volume, and connection relationships may still be observable at the transport layer.
-
----
-
-## Example Applications
-
-BastionRoute is payload agnostic and can transport arbitrary binary streams between connected peers.
-
-Potential applications include:
-
-* WireGuard VPN transport
-* Generic UDP stream transport
-* Binary message buses
-* RPC transports
-* Telemetry and sensor streams
-* Multiplayer game state synchronization
-* File transfer pipelines
-* Custom application protocols
-
-No relay modifications are required. Only endpoint payload handling changes.
 
 ---
 
