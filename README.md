@@ -61,16 +61,55 @@ sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
 ## 📦 Deployment Mechanics
 
 ### Prerequisites
-* Go 1.21+ compiler toolchain
+* **Go 1.21+ compiler toolchain**
+* `make` utility installed (standard on Linux/macOS)
 * WireGuard installed and configured locally
 
-### Installation
-### Ubuntu
-```bash
-git clone [https://github.com/klauscam/bastionroute.git](https://github.com/klauscam/bastionroute.git)
-cd bastionroute
-go build -o bastionroute-shim main.go
-go build -o bastionroute-relay main.go
+### Installation & Compilation
+
+BastionRoute utilizes a standard multi-binary `cmd/` architecture. The compilation step automatically leverages the `Makefile` to pull down required dependencies (including `github.com/gorilla/websocket`) and verify the Go environment. 
+
+To download dependencies and compile all binaries into a localized execution folder simultaneously, run:
+
+```
+git clone https://github.com/klauscam/BastionRoute.git
+cd BastionRoute
+make
+```
+
+Once completed, both production-ready binaries will be available inside the local target execution directory:
+* `bin/bastionroute-shim`
+* `bin/bastionroute-relay`
+
+To clean up build artifacts and purge compiled binaries from your workspace at any time, run:
+
+```
+make clean
+```
+
+---
+
+## 🚀 Execution Guide
+
+### 1. Running the Central Stateless Relay
+Deploy the relay binary on a public-facing cloud server or localized DMZ boundary. This acts as the zero-knowledge broker mapping atomic routing tags in memory:
+
+```
+./bin/bastionroute-relay --port=443 --auth-token="your-secure-cluster-token"
+```
+
+### 2. Running the Server-Side Shim (Substation / Legacy Asset Gateway)
+Execute the shim in server mode behind your restricted infrastructure to initiate the outbound-only TLS 1.3 WebSocket connection back to the public relay broker:
+
+```
+./bin/bastionroute-shim --wg-role=server --uri="wss://relay.yourdomain.com" --room="secure-room-id" --wg-ip="127.0.0.1" --wg-port=51820
+```
+
+### 3. Running the Client-Side User Pipeline (Engineering Workstation)
+Execute the shim in client mode on your remote device. The internal user-space supervisor loop will automatically spin up a local interface to securely bridge your native WireGuard application:
+
+```
+./bin/bastionroute-shim --wg-role=client --uri="wss://relay.yourdomain.com" --room="secure-room-id" --peer-id="remote-peer-01" --wg-ip="127.0.0.1" --wg-port=51820
 ```
 
 ### OpenWrt
