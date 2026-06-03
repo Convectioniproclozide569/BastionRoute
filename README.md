@@ -4,7 +4,7 @@
 
 BastionRoute is a zero-trust Layer-3 overlay network designed to securely route WireGuard traffic over a stateful Layer-7 WebSocket transport.
 
-By initiating all data pipelines via outbound-only connections, BastionRoute completely eliminates the need for inbound firewall rules or open port exposure. It eliminates inbound port exposure while preserving WireGuard end-to-end encryption, blending your secure communications seamlessly into background web traffic.
+By initiating all data pipelines via outbound-only connections, BastionRoute operates in a strict no open port exposure. It eliminates inbound port exposure while preserving WireGuard end-to-end encryption.
 
 ---
 
