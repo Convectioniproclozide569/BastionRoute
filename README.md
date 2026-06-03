@@ -114,14 +114,14 @@ Execute the shim in client mode on your remote device. The internal user-space s
 
 ### OpenWrt
 ```bash
-git clone [https://github.com/klauscam/bastionroute.git](https://github.com/klauscam/bastionroute.git)
+git clone https://github.com/klauscam/bastionroute.git
 cd bastionroute
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bastionroute-shim
 ```
 
 ### Termux (Android)
 ```bash
-git clone [https://github.com/klauscam/bastionroute.git](https://github.com/klauscam/bastionroute.git)
+git clone https://github.com/klauscam/bastionroute.git
 cd bastionroute
 GO_ENABLED=0 GOOS=android GOARCH=arm64 go build -o bastionroute-shim
 ```
