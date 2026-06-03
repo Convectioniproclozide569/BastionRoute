@@ -2,7 +2,7 @@
 
 > **An outbound-initiated Layer-7 WebSocket orchestrator for WireGuard that enforces a strict zero-inbound port architecture.**
 
-BastionRoute is an industrial-grade, anti-fragile, zero-trust Layer-3 overlay network designed to securely route WireGuard traffic over a stateful Layer-7 WebSocket transport.
+BastionRoute is a zero-trust Layer-3 overlay network designed to securely route WireGuard traffic over a stateful Layer-7 WebSocket transport.
 
 By initiating all data pipelines via outbound-only connections, BastionRoute completely eliminates the need for inbound firewall rules or open port exposure. It transforms your network infrastructure into an entirely invisible fortress, blending your secure communications seamlessly into background web traffic.
 
@@ -13,9 +13,9 @@ By initiating all data pipelines via outbound-only connections, BastionRoute com
 BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to optimize transport efficiency and preserve cryptographic isolation:
 
 * **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a stateless Cloud Relay. No ingress ports are ever opened on your local perimeter.
-* **Double-Wrapper Encapsulation:** Layer-3 Noise-protocol frames (WireGuard UDP) are transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets.
+* **Double-Wrapper Encapsulation:** Layer-3 Noise-protocol frames (WireGuard UDP) are transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended).
 * **Stateless Cloud Brokerage:** The public cloud relay functions as a zero-knowledge, blind broker. It routes traffic based entirely on atomic routing tags in memory, removing any persistent database or state synchronization requirements.
-* **Anti-Fragile Lifecycle Supervision:** An integrated, infinite supervisor loop guarantees self-healing resilience. If a network socket collapses due to carrier routing switches, the shim cleanly drains user-space allocations, safeguards local interface continuity, and initiates an immediate redial sequence.
+* **Anti-Fragile Lifecycle Supervision:** An integrated, infinite supervisor loop guarantees self-healing resilience. If a network socket collapses due to carrier routing switches, the shim cleanly drains user-space allocations, safeguards local interface continuity, and initiates an immediate redial sequence. ("Almost always" works)
 
 ---
 
@@ -24,16 +24,14 @@ BastionRoute leverages a decoupled, multi-shim architecture that separates the d
 BastionRoute overcomes the traditional performance penalties associated with nested encapsulation (the "TCP-in-TCP Meltdown") to deliver line-speed throughput over volatile, high-latency wide-area cellular networks.
 
 ### Raw UDP Throughput Profile
-When evaluated using raw UDP datagram tests over a high-latency (**165 ms**) mobile connection, the user-space channel queues achieve near-perfect efficiency:
-* **Bitrate:** Rock-solid **80.0 Mbps** flatline consistency.
+When evaluated using raw UDP datagram tests over a high-latency (**165 ms**) mobile connection, the user-space channel queues achieve the following:
+* **Bitrate:** Peaking at around **80.0 Mbps** .
 * **Jitter:** **0.145 ms**—enabling elite, real-time voice, video, and streaming transit.
-* **Packet Loss:** **< 0.7%** under sustained saturation.
 
 ### Stateful TCP Consistency Profile
 When running stateful TCP testing over the nested network overlay, the optimized frame-flushing engine prevents exponential backoffs:
-* **Throughput:** Climbs linearly from an initial **45 Mbps** to a peak of **79.1 Mbps**.
-* **Retransmissions:** **2** total drops across a sustained 10-second saturation test.
-* **Congestion Stability:** Smooth window expansion up to **1.16 MBytes** without structural sawtooth collapses.
+* **Throughput:** Climbs linearly from an initial **45 Mbps** to a peak of **65 Mbps**.
+* **Retransmissions:** Low total drops across a sustained 10-second saturation test.
 
 ---
 
@@ -143,11 +141,11 @@ Run the shim in client mode on your remote device. The user-space supervisor loo
 
 | System Layer | Core Technical Mechanism | Security & Performance Objective |
 | :--- | :--- | :--- |
-| **Transport Wrapper** | Noise Protocol over WebSockets | Provides uninterrupted network access through common port TCP 443. |
+| **Transport Wrapper** | Noise Protocol over WebSockets | Provides "almost" uninterrupted network access through common port TCP 443. |
 | **Perimeter Hardening** | Outbound-Initiated Socket Brokerage | Eradicates public-facing IPv4/IPv6 target signatures. |
-| **Control Keep-Alives** | Layer-7 Ping/Pong Heartbeat Interception | Bypasses restrictive carrier timeouts on silent lines. |
+| **Control Keep-Alives** | Layer-7 Ping/Pong Heartbeat Interception | Prevents carrier timeouts on silent lines. |
 | **Resilience Supervisor** | Decoupled Socket Loop Recovery | Prevents local tunnel drops during physical WAN handoffs. |
-| **Congestion Fix** | BBR Socket Optimization + Explicit Flushing | Resolves and eliminates TCP-in-TCP performance degradation. |
+| **Congestion Fix** | BBR Socket Optimization + Explicit Flushing | Mitigates TCP-in-TCP performance degradation. |
 
 ---
 
