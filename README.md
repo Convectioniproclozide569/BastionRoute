@@ -14,7 +14,7 @@ BastionRoute leverages a decoupled, multi-shim architecture that separates the d
 
 * **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a stateless Cloud Relay. It does not require inbound ports under normal deployment configurations.
 * **Double-Wrapper Encapsulation:** WireGuard payload is transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). Wireguard Encryption is never altered. BastionRoute does not have access to WireGuard private keys and does not inspect or decrypt WireGuard payload data. BastionRoute does only one thing, provides an outbound route over websockets.
-* **Stateless Cloud Brokerage:** The public cloud relay functions as a relay broker with no knowledge of payload. It routes traffic based entirely on atomic routing tags in memory. WireGuard payload contents remain protected by WireGuard encryption even if the relay is compromised. Relay operators may still observe transport metadata such as connection timing, identifiers, and traffic volume.
+* **Stateless Cloud Brokerage:** The public cloud relay functions as a relay broker with no knowledge of payload. It routes traffic based entirely on atomic routing tags in memory. WireGuard payload contents remain encrypted under WireGuard's security model even if a relay is compromised. Relay operators may still observe transport metadata such as connection timing, identifiers, and traffic volume.
 
 ---
 
@@ -165,18 +165,6 @@ Run the shim in client mode on your remote device. The user-space supervisor loo
 ### Threat Considerations
 
 This system does not provide anonymity guarantees. Traffic metadata such as timing, volume, and connection relationships may still be observable at the transport layer.
-
----
-
-## 📋 Technical Blueprint Overview
-
-| System Layer | Core Technical Mechanism | Security & Performance Objective |
-| :--- | :--- | :--- |
-| **Transport Wrapper** | Wireguard payload over WebSockets | Provides "almost" uninterrupted network access through common port TCP 443. |
-| **Perimeter Hardening** | Outbound-Initiated Socket Brokerage | Removes direct inbound exposure of endpoints. |
-| **Control Keep-Alives** | Layer-7 Ping/Pong Heartbeat Interception | Prevents carrier timeouts on silent lines. |
-| **Resilience Supervisor** | Decoupled Socket Loop Recovery | Prevents local tunnel drops during physical WAN handoffs. |
-| **Congestion Fix** | BBR Socket Optimization + Explicit Flushing | Mitigates TCP-over-TCP performance degradation. |
 
 ---
 
