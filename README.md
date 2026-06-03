@@ -15,65 +15,8 @@ BastionRoute leverages a decoupled, multi-shim architecture that separates the d
 * **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a stateless Cloud Relay. It does not require inbound ports under normal deployment configurations.
 * **Double-Wrapper Encapsulation:** The binary payload is transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). The payload is never altered. BastionRoute does only one thing, provides an outbound route over websockets.
 * **Stateless Cloud Brokerage:** The public cloud relay functions as a relay broker with no knowledge of payload. It routes traffic based entirely on http path routing in memory. The payload contents injested in the architecture, remain unaltered throughout its lifecycle.
-
-
 ---
 
-## (Example 1) WireGuard Network over BastionRoute
-
----
-
-## Architectural Diagram
-
-![Architectural Diagram](images/arch_diagram.png)
-
----
-
-## 🚀 Performance Notes
-
-### Performance characteristics depend heavily on:
-* underlying network conditions
-* WebSocket implementation (e.g. TLS termination)
-* MTU configuration
-* relay latency and placement
-
-## Observed Test Conditions (Example Setup)
-
-### The following results were observed under controlled testing conditions:
-
-* High-latency mobile network (~165 ms RTT)
-* Standard Linux kernel networking stack
-* Single relay instance
-
-### UDP Throughput (through tunnel)
-* Peak throughput: ~80 Mbps
-* Jitter: ~0.145 ms
-
-### TCP Throughput (through tunnel)
-* Sustained throughput: ~45–65 Mbps
-* Stable under moderate packet loss conditions
-
->* Note: Results are workload- and environment-dependent and are not guaranteed. iperf3 used for benchmarking unless otherwise stated
-
----
-
-## 🛠️ Engine Configuration & Tuning Matrix
-
-To achieve optimal performance across lossy or highly latent WAN links, the following operating system and network settings are natively utilized:
-
-### 1. Loopback MTU Stabilization Matrix
-To prevent catastrophic packet fragmentation at physical gateway boundaries, the underlying virtual WireGuard interface must be clamped to account for encapsulation overhead:
-
-$$\text{MTU} = 1280 \text{ bytes}$$ (recommended baseline)
-
-### 2. Linux TCP Optimization (Relay Node)
-BBR congestion control may improve performance under high RTT conditions:
-
-```bash
-# Enable BBR Congestion Control on the host system
-sudo sysctl -w net.core.default_qdisc=fq
-sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
-```
 ## 📦 Deployment Mechanics
 
 ### Prerequisites
@@ -150,7 +93,7 @@ Run the shim in server mode behind your private infrastructure to establish the 
 ```
 
 ### Running the Client-Side User Pipeline
-Run the shim in client mode on your remote device. The user-space supervisor loop will spawn a local UDP interface to bridge your native WireGuard application:
+Run the shim in client mode on your remote device. The user-space supervisor loop will spawn a local UDP interface to bridge your native application:
 
 ```
 ./bastionroute-shim --wg-role=client --uri="wss://relay.yourdomain.com" --room="secure-room-id" --peer-id="remote-peer-01" --wg-ip="127.0.0.1" --wg-port=51820
@@ -158,9 +101,68 @@ Run the shim in client mode on your remote device. The user-space supervisor loo
 
 ---
 
-## Security Model (for WireGuard example)
 
-### BastionRoute inherits security properties from WireGuard. Specifically:
+---
+
+## (Example 1) WireGuard Network over BastionRoute
+
+---
+
+### Architectural Diagram
+
+![Architectural Diagram](images/arch_diagram.png)
+
+---
+
+### 🚀 Performance Notes
+
+#### Performance characteristics depend heavily on:
+* underlying network conditions
+* WebSocket implementation (e.g. TLS termination)
+* MTU configuration
+* relay latency and placement
+
+### Observed Test Conditions (Example Setup)
+
+#### The following results were observed under controlled testing conditions:
+
+* High-latency mobile network (~165 ms RTT)
+* Standard Linux kernel networking stack
+* Single relay instance
+
+#### UDP Throughput (through tunnel)
+* Peak throughput: ~80 Mbps
+* Jitter: ~0.145 ms
+
+#### TCP Throughput (through tunnel)
+* Sustained throughput: ~45–65 Mbps
+* Stable under moderate packet loss conditions
+
+>* Note: Results are workload- and environment-dependent and are not guaranteed. iperf3 used for benchmarking unless otherwise stated
+
+---
+
+### 🛠️ Engine Configuration & Tuning Matrix
+
+To achieve optimal performance across lossy or highly latent WAN links, the following operating system and network settings are natively utilized:
+
+#### 1. Loopback MTU Stabilization Matrix
+To prevent catastrophic packet fragmentation at physical gateway boundaries, the underlying virtual WireGuard interface must be clamped to account for encapsulation overhead:
+
+$$\text{MTU} = 1280 \text{ bytes}$$ (recommended baseline)
+
+#### 2. Linux TCP Optimization (Relay Node)
+BBR congestion control may improve performance under high RTT conditions:
+
+```bash
+# Enable BBR Congestion Control on the host system
+sudo sysctl -w net.core.default_qdisc=fq
+sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
+```
+
+### Security Model (for WireGuard example)
+
+#### BastionRoute inherits security properties from WireGuard. Specifically:
 
 * Payload encryption is handled entirely by WireGuard
 * BastionRoute does not decrypt or inspect payload data
