@@ -13,7 +13,7 @@ By initiating all data pipelines via outbound-only connections, BastionRoute com
 BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to optimize transport efficiency and preserve cryptographic isolation:
 
 * **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a stateless Cloud Relay. No ingress ports are ever opened on your local perimeter.
-* **Double-Wrapper Encapsulation:** Layer-3 Noise-protocol frames (WireGuard UDP) are transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets, and streamed over an encrypted TLS 1.3 pipeline.
+* **Double-Wrapper Encapsulation:** Layer-3 Noise-protocol frames (WireGuard UDP) are transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets.
 * **Stateless Cloud Brokerage:** The public cloud relay functions as a zero-knowledge, blind broker. It routes traffic based entirely on atomic routing tags in memory, removing any persistent database or state synchronization requirements.
 * **Anti-Fragile Lifecycle Supervision:** An integrated, infinite supervisor loop guarantees self-healing resilience. If a network socket collapses due to carrier routing switches, the shim cleanly drains user-space allocations, safeguards local interface continuity, and initiates an immediate redial sequence.
 
@@ -44,11 +44,7 @@ To achieve optimal performance across lossy or highly latent WAN links, the foll
 ### 1. Loopback MTU Stabilization Matrix
 To prevent catastrophic packet fragmentation at physical gateway boundaries, the underlying virtual WireGuard interface must be clamped to account for encapsulation overhead:
 
-$$\text{Total Physical Ethernet MTU} = 1500 \text{ bytes}$$
-
-$$\text{IPv4 Header (20B)} + \text{TCP Header (20B)} + \text{TLS/WS Overhead (32B)} + \text{WG Wrapper (56B)} = 128 \text{ bytes}$$
-
-$$\text{Optimal Configured MTU} = 1500 - 128 = 1372 \longrightarrow 1360 \text{ bytes (Safe Baseline)}$$
+$$\text{MTU} = 1280 \text{ bytes}$$
 
 ### 2. Sockets & Congestion Control Tuning
 On the host or public cloud relay machine, configure the Linux kernel to use Google's BBR (Bottleneck Bandwidth and RTT) congestion control algorithm rather than standard Cubic. BBR prevents packet loss from triggering premature window exhaustion:
@@ -99,7 +95,7 @@ Deploy the relay binary on a public-facing cloud server or localized DMZ boundar
 ```
 
 ### 2. Running the Server-Side Shim (WireGuard Server interface)
-Execute the shim in server mode behind your restricted infrastructure to initiate the outbound-only TLS 1.3 WebSocket connection back to the public relay broker:
+Execute the shim in server mode behind your restricted infrastructure to initiate the outbound-only WebSocket connection back to the public relay broker:
 
 ```
 ./bin/bastionroute-shim --wg-role=server --uri="wss://relay.yourdomain.com" --room="secure-room-id" --wg-ip="127.0.0.1" --wg-port=51820
@@ -147,7 +143,7 @@ Run the shim in client mode on your remote device. The user-space supervisor loo
 
 | System Layer | Core Technical Mechanism | Security & Performance Objective |
 | :--- | :--- | :--- |
-| **Transport Wrapper** | Noise Protocol over TLS 1.3 WebSockets | Provides uninterrupted network access through common port TCP 443. |
+| **Transport Wrapper** | Noise Protocol over WebSockets | Provides uninterrupted network access through common port TCP 443. |
 | **Perimeter Hardening** | Outbound-Initiated Socket Brokerage | Eradicates public-facing IPv4/IPv6 target signatures. |
 | **Control Keep-Alives** | Layer-7 Ping/Pong Heartbeat Interception | Bypasses restrictive carrier timeouts on silent lines. |
 | **Resilience Supervisor** | Decoupled Socket Loop Recovery | Prevents local tunnel drops during physical WAN handoffs. |
