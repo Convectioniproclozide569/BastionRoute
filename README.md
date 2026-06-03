@@ -13,7 +13,7 @@ By initiating all data pipelines via outbound-only connections, BastionRoute req
 BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to optimize transport efficiency and preserve cryptographic isolation. BastionRoute is oblivious of the data being passed through:
 
 * **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a stateless Cloud Relay. Does not require inbound ports under normal deployment configurations.
-* **Double-Wrapper Encapsulation:** Layer-3 Noise-protocol frames (WireGuard UDP) are transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). Wireguard Encryption is never altered. BastionRoute has zero knowlegde of the data, private keys, and inner networking. BastionRoute does only one thing, provides an outbound route over websockets.
+* **Double-Wrapper Encapsulation:** WireGuard payload is transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). Wireguard Encryption is never altered. BastionRoute has zero knowlegde of the data, private keys, and inner networking. BastionRoute does only one thing, provides an outbound route over websockets.
 * **Stateless Cloud Brokerage:** The public cloud relay functions as a zero-knowledge, blind broker. It routes traffic based entirely on atomic routing tags in memory, removing any persistent database or state synchronization requirements. If the relay gets compromised, data remains inaccessable due to the end-to-end Wireguard encryption. 
 
 ---
@@ -48,7 +48,7 @@ BastionRoute leverages a decoupled, multi-shim architecture that separates the d
 * Sustained throughput: ~45–65 Mbps
 * Stable under moderate packet loss conditions
 
->* Note: Results are workload- and environment-dependent and are not guaranteed.
+>* Note: Results are workload- and environment-dependent and are not guaranteed. iperf3 used for benchmarking unless otherwise stated
 
 ---
 
@@ -172,11 +172,11 @@ This system does not provide anonymity guarantees. Traffic metadata such as timi
 
 | System Layer | Core Technical Mechanism | Security & Performance Objective |
 | :--- | :--- | :--- |
-| **Transport Wrapper** | Noise Protocol over WebSockets | Provides "almost" uninterrupted network access through common port TCP 443. |
-| **Perimeter Hardening** | Outbound-Initiated Socket Brokerage | Eradicates public-facing IPv4/IPv6 target signatures. |
+| **Transport Wrapper** | Wireguard payload over WebSockets | Provides "almost" uninterrupted network access through common port TCP 443. |
+| **Perimeter Hardening** | Outbound-Initiated Socket Brokerage | Removes direct inbound exposure of endpoints. |
 | **Control Keep-Alives** | Layer-7 Ping/Pong Heartbeat Interception | Prevents carrier timeouts on silent lines. |
 | **Resilience Supervisor** | Decoupled Socket Loop Recovery | Prevents local tunnel drops during physical WAN handoffs. |
-| **Congestion Fix** | BBR Socket Optimization + Explicit Flushing | Mitigates TCP-in-TCP performance degradation. |
+| **Congestion Fix** | BBR Socket Optimization + Explicit Flushing | Mitigates TCP-over-TCP performance degradation. |
 
 ---
 
