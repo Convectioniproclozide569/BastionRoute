@@ -158,3 +158,26 @@ Run the shim in client mode on your remote device. The user-space supervisor loo
 ## 📄 License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## ⚠️ Legal Disclaimer & Limitation of Liability
+
+**IMPORTANT: PLEASE READ CAREFULLY BEFORE USING THIS SOFTWARE.**
+
+Project Odessos is an open-source network utility designed exclusively for legitimate network management, authorized administrative tunneling, authorized security audits, and educational research purposes. 
+
+### 1. Prohibited Use Case Policy
+Any use of this software for unauthorized, malicious, or illegal activities is strictly prohibited. This includes, but is not limited to:
+* Circumventing network security controls or policies without explicit authorization from the network owner.
+* Utilizing the software to hide malicious traffic, execute unauthorized network intrusion, or engage in distributed denial-of-service (DDoS) orchestration.
+* Deploying the shims on infrastructure where you do not possess explicit, documented administrative consent.
+
+### 2. No Warranty & "As-Is" Clause
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS, DEVELOPERS, OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+### 3. Indemnification & Liability Exclusion
+By compiling, executing, or distributing this software, you assume 100% of the responsibility and risk associated with its deployment. Under no circumstances shall the original developers or contributors be held liable for:
+* Any direct, indirect, incidental, or consequential damages resulting from the use or inability to use this software.
+* Data corruption, loss of network connectivity, hardware damage, or security breaches arising from configuration errors.
+* Legal or regulatory repercussions resulting from the deployment of this software on restricted or third-party enterprise networks.
+
+**The user assumes all liability for compliance with local, national, and international telecommunications and digital privacy laws.**
