@@ -1,10 +1,10 @@
 # BastionRoute (v0.1.0-alpha)
 
-> **An outbound-initiated Layer-7 WebSocket orchestrator for WireGuard that enforces a strict zero-inbound port architecture.**
+> **An outbound-initiated WebSocket orchestrator for WireGuard that operates with zero-inbound port architecture.**
 
 BastionRoute is a zero-trust Layer-3 overlay network designed to securely route WireGuard traffic over a stateful Layer-7 WebSocket transport.
 
-By initiating all data pipelines via outbound-only connections, BastionRoute operates in a strict no open port exposure. It eliminates inbound port exposure while preserving WireGuard end-to-end encryption.
+By initiating all data pipelines via outbound-only connections, BastionRoute requires no open port exposure while preserving WireGuard end-to-end encrypted payloads. It operates as a transport encapsulation layer only.
 
 ---
 
@@ -24,19 +24,31 @@ BastionRoute leverages a decoupled, multi-shim architecture that separates the d
 
 ---
 
-## 🚀 Performance Metrics (Real-World Test Data)
+## 🚀 Performance Notes
 
-BastionRoute overcomes the traditional performance penalties associated with nested encapsulation (the "TCP-in-TCP Meltdown") to deliver line-speed throughput over volatile, high-latency wide-area cellular networks.
+### Performance characteristics depend heavily on:
+* underlying network conditions
+* WebSocket implementation (e.g. TLS termination)
+* MTU configuration
+* relay latency and placement
 
-### Raw UDP Throughput Profile
-When evaluated using raw UDP datagram tests over a high-latency (**165 ms**) mobile connection, the user-space channel queues achieve the following:
-* **Bitrate:** Peaking at around **80.0 Mbps** .
-* **Jitter:** **0.145 ms**—enabling elite, real-time voice, video, and streaming transit.
+## Observed Test Conditions (Example Setup)
 
-### Stateful TCP Consistency Profile
-When running stateful TCP testing over the nested network overlay, the optimized frame-flushing engine prevents exponential backoffs:
-* **Throughput:** Climbs linearly from an initial **45 Mbps** to a peak of **65 Mbps**.
-* **Retransmissions:** Low total drops across a sustained 10-second saturation test.
+### The following results were observed under controlled testing conditions:
+
+* High-latency mobile network (~165 ms RTT)
+* Standard Linux kernel networking stack
+* Single relay instance
+
+### UDP Throughput (through tunnel)
+* Peak throughput: ~80 Mbps
+* Jitter: ~0.145 ms
+
+### TCP Throughput (through tunnel)
+* Sustained throughput: ~45–65 Mbps
+* Stable under moderate packet loss conditions
+
+>* Note: Results are workload- and environment-dependent and are not guaranteed.
 
 ---
 
@@ -47,10 +59,10 @@ To achieve optimal performance across lossy or highly latent WAN links, the foll
 ### 1. Loopback MTU Stabilization Matrix
 To prevent catastrophic packet fragmentation at physical gateway boundaries, the underlying virtual WireGuard interface must be clamped to account for encapsulation overhead:
 
-$$\text{MTU} = 1280 \text{ bytes}$$
+$$\text{MTU} = 1280 \text{ bytes}$$ (recommended baseline)
 
-### 2. Sockets & Congestion Control Tuning
-On the host or public cloud relay machine, configure the Linux kernel to use Google's BBR (Bottleneck Bandwidth and RTT) congestion control algorithm rather than standard Cubic. BBR prevents packet loss from triggering premature window exhaustion:
+### 2. Linux TCP Optimization (Relay Node)
+BBR congestion control may improve performance under high RTT conditions:
 
 ```bash
 # Enable BBR Congestion Control on the host system
@@ -142,6 +154,20 @@ Run the shim in client mode on your remote device. The user-space supervisor loo
 
 ---
 
+## Security Model
+
+### BastionRoute inherits security properties from WireGuard. Specifically:
+
+* Payload encryption is handled entirely by WireGuard
+* BastionRoute does not decrypt or inspect payload data
+* Relay nodes do not require access to cryptographic keys
+
+### Threat Considerations
+
+This system does not provide anonymity guarantees. Traffic metadata such as timing, volume, and connection relationships may still be observable at the transport layer.
+
+---
+
 ## 📋 Technical Blueprint Overview
 
 | System Layer | Core Technical Mechanism | Security & Performance Objective |
@@ -154,29 +180,19 @@ Run the shim in client mode on your remote device. The user-space supervisor loo
 
 ---
 
-## 📄 License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+## ⚠️ Legal & Usage Notice
 
-## ⚠️ Legal Disclaimer & Limitation of Liability
+BastionRoute is provided for legitimate network administration, research, and authorized deployment scenarios only.
 
-**IMPORTANT: PLEASE READ CAREFULLY BEFORE USING THIS SOFTWARE.**
+Users are solely responsible for ensuring compliance with applicable laws, regulations, and organizational policies when deploying or using this software.
 
-Project BastionRoute is an open-source network utility designed exclusively for legitimate network management, authorized administrative networking, authorized security audits, and educational research purposes. 
+This software does not include mechanisms for enforcing usage restrictions and should not be deployed in environments where its use would violate applicable rules or agreements.
 
-### 1. Prohibited Use Case Policy
-Any use of this software for unauthorized, malicious, or illegal activities is strictly prohibited. This includes, but is not limited to:
-* Circumventing network security controls or policies without explicit authorization from the network owner.
-* Utilizing the software to hide malicious traffic, execute unauthorized network intrusion, or engage in distributed denial-of-service (DDoS) orchestration.
-* Deploying the shims on infrastructure where you do not possess explicit, documented administrative consent.
+## License
 
-### 2. No Warranty & "As-Is" Clause
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS, DEVELOPERS, OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+This project is licensed under the Apache License 2.0.
 
-### 3. Indemnification & Liability Exclusion
-By compiling, executing, or distributing this software, you assume 100% of the responsibility and risk associated with its deployment. Under no circumstances shall the original developers or contributors be held liable for:
-* Any direct, indirect, incidental, or consequential damages resulting from the use or inability to use this software.
-* Data corruption, loss of network connectivity, hardware damage, or security breaches arising from configuration errors.
-* Legal or regulatory repercussions resulting from the deployment of this software on restricted or third-party enterprise networks.
+The Apache License governs use, modification, and distribution of this software and includes its own limitation of liability and warranty disclaimers.
 
-**The user assumes all liability for compliance with local, national, and international telecommunications and digital privacy laws.**
+See the LICENSE file for full terms.
