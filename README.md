@@ -163,7 +163,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 **IMPORTANT: PLEASE READ CAREFULLY BEFORE USING THIS SOFTWARE.**
 
-Project Odessos is an open-source network utility designed exclusively for legitimate network management, authorized administrative tunneling, authorized security audits, and educational research purposes. 
+Project BastionRoute is an open-source network utility designed exclusively for legitimate network management, authorized administrative networking, authorized security audits, and educational research purposes. 
 
 ### 1. Prohibited Use Case Policy
 Any use of this software for unauthorized, malicious, or illegal activities is strictly prohibited. This includes, but is not limited to:
