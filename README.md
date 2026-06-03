@@ -16,6 +16,11 @@ BastionRoute leverages a decoupled, multi-shim architecture that separates the d
 * **Double-Wrapper Encapsulation:** Layer-3 Noise-protocol frames (WireGuard UDP) are transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). Wireguard Encryption is never altered. BastionRoute has zero knowlegde of the data, private keys, and inner networking. BastionRoute does only one thing, provides an outbound route over websockets.
 * **Stateless Cloud Brokerage:** The public cloud relay functions as a zero-knowledge, blind broker. It routes traffic based entirely on atomic routing tags in memory, removing any persistent database or state synchronization requirements. If the relay gets compromised, data remains inaccessable due to the end-to-end Wireguard encryption. 
 
+---
+
+## Architectural Diagram
+
+![Architectural Diagram](images/network_diagram.png)
 
 ---
 
