@@ -180,6 +180,14 @@ This system does not provide anonymity guarantees. Traffic metadata such as timi
 
 ---
 
+## Security Notice
+
+BastionRoute provides transport relaying only.
+Authentication, authorization, encryption, and access control remain the responsibility of the underlying WireGuard configuration and deployment.
+
+## Experimental Status
+
+This software is currently alpha-quality software and should be evaluated thoroughly before production deployment.
 
 ## ⚠️ Legal & Usage Notice
 
