@@ -1,20 +1,20 @@
 # BastionRoute (v0.1.0-alpha)
 
-> **An outbound-initiated WebSocket relay fabric for binary streams that operates with zero-inbound port architecture.**
+> **An outbound-initiated WebSocket relay fabric for UDP datagram binary streams that operates with zero-inbound port architecture.**
 
-BastionRoute is an outbound-only binary stream relay fabric designed to route binary traffic over a stateful Layer-7 WebSocket transport.
+BastionRoute is an outbound-only UDP datagram binary stream relay fabric designed to route binary traffic over a stateful Layer-7 WebSocket transport.
 
-By initiating all data pipelines via outbound-only connections, BastionRoute requires no open port exposure and does not interpret payload semantics. It only provides deterministic routing of binary streams between identified peers over an outbound WebSocket relay fabric. BastionRoute is a transport-agnostic relay fabric for routing binary streams between outbound-connected peers.
+By initiating all data pipelines via outbound-only websocket connections, BastionRoute requires no open port exposure and does not interpret payload semantics. It only provides deterministic routing of data streams between identified peers over an outbound WebSocket relay fabric. BastionRoute is a transport-agnostic relay fabric for routing binary streams between outbound-connected peers. BastionRoute is resposible for a single function: routing UDP datagram binary streams between outbound-connected peers over WebSocket connections via a web accessable relay.
 
 ---
 
 ## ⚡ Architectural Core
 
-BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to optimize transport efficiency and preserve payload as-is.
+BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to preserve payload as-is.
 
-* **Zero-Inbound Footprint:** The home gateway or target server establishes a persistent, outbound-initiated WebSocket control link to a Cloud Relay. It does not require inbound ports under normal deployment configurations.
-* **Double-Wrapper Encapsulation:** The binary payload is transparently ingested by a user-space Go shim, packed into Layer-7 WebSockets (the use of TLS via nginx or other reverse proxies is highly recommended). The payload is never altered. BastionRoute performs a single function: routing binary streams between outbound-connected peers over WebSocket transports.
-* **Cloud Brokerage:** The public cloud relay functions as a payload-agnostic relay broker and does not interpret application payload semantics. It routes traffic using room and peer identifiers established during connection setup and maintained in transient memory structures. The payload contents injested in the architecture, remain unaltered throughout its lifecycle.
+* **Zero-Inbound Footprint:** The target server establishes a persistent, outbound-initiated WebSocket control link to a Relay. It does not require inbound ports under normal deployment configurations.
+* **Double-Wrapper Encapsulation:** The binary payload is transparently ingested by the shim, packed into Layer-7 WebSockets frames (the use of TLS via nginx or other reverse proxies is highly recommended). The payload is never altered. 
+* **Relay Brokerage:** The relay functions as a payload-agnostic relay broker and does not interpret application payload semantics. It routes traffic using room and peer identifiers established during connection setup and maintained in transient memory structures. The payload contents injested in the architecture, remain unaltered throughout its lifecycle.
 
 BastionRoute intentionally does not define encryption, authentication, authorization, payload schemas, or application semantics. These responsibilities remain with the applications utilizing the relay fabric.
 ---
@@ -51,25 +51,25 @@ make clean
 
 ## 🚀 Execution Guide
 
-### 1. Running the Relay
-Deploy the relay binary on a public-facing cloud server or localized DMZ boundary. This acts as a payload-agnostic relay broker that maintains transient routing state in memory:
+### Running the Relay
+Deploy the relay binary on a web accessable server or localized DMZ boundary. This acts as a payload-agnostic relay broker that maintains transient routing state in memory:
 
 ```
 ./bin/bastionroute-relay --port=8080
 ```
 
-### 2. Running the Server-Side Shim (Server interface)
-Execute the shim in server mode behind your restricted infrastructure to initiate the outbound-only WebSocket connection back to the public relay broker:
+### Running the Server-Side Control Plane
+Run the shim in server mode behind your private infrastructure to establish the outbound control link to the public relay broker:
 
 ```
-./bin/bastionroute-shim --wg-role=server --uri="wss://relay.yourdomain.com" --room="secure-room-id" --wg-ip="127.0.0.1" --wg-port=51820
+./bastionroute-shim --wg-role=server --uri="wss://relay.yourdomain.com" --room="room-id" --wg-ip="127.0.0.1" --wg-port=51820
 ```
 
-### 3. Running the Client-Side Shim (Peer interface)
-Execute the shim in client mode on your remote device. The internal user-space supervisor loop will automatically spin up a local interface to securely bridge your native WireGuard application:
+### Running the Client-Side User Pipeline
+Run the shim in client mode on your remote device. The user-space supervisor loop will spawn a local UDP interface to bridge your native application:
 
 ```
-./bin/bastionroute-shim --wg-role=client --uri="wss://relay.yourdomain.com" --room="secure-room-id" --peer-id="remote-peer-01" --wg-ip="127.0.0.1" --wg-port=51820
+./bastionroute-shim --wg-role=client --uri="wss://relay.yourdomain.com" --room="room-id" --peer-id="remote-peer-01" --wg-ip="127.0.0.1" --wg-port=51820
 ```
 
 ### OpenWrt
@@ -83,29 +83,15 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bastionroute-shim
 ```bash
 git clone https://github.com/klauscam/bastionroute.git
 cd bastionroute
-GO_ENABLED=0 GOOS=android GOARCH=arm64 go build -o bastionroute-shim
+CGO_ENABLED=0 GOOS=android GOARCH=arm64 go build -o bastionroute-shim
 ```
 
-
-### Running the Server-Side Control Plane
-Run the shim in server mode behind your private infrastructure to establish the outbound control link to the public relay broker:
-
-```
-./bastionroute-shim --wg-role=server --uri="wss://relay.yourdomain.com" --room="secure-room-id" --wg-ip="127.0.0.1" --wg-port=51820
-```
-
-### Running the Client-Side User Pipeline
-Run the shim in client mode on your remote device. The user-space supervisor loop will spawn a local UDP interface to bridge your native application:
-
-```
-./bastionroute-shim --wg-role=client --uri="wss://relay.yourdomain.com" --room="secure-room-id" --peer-id="remote-peer-01" --wg-ip="127.0.0.1" --wg-port=51820
-```
 
 ---
 
 ## Example Applications
 
-BastionRoute is payload agnostic and can transport arbitrary binary streams between connected peers.
+BastionRoute is payload agnostic and can transport arbitrary UDP datagram binary streams between connected peers.
 
 Potential applications include:
 
@@ -118,7 +104,7 @@ Potential applications include:
 * File transfer pipelines
 * Custom application protocols
 
-No relay modifications are required. Only endpoint payload handling changes.
+No relay or shim modifications are required.
 
 ---
 
@@ -156,7 +142,7 @@ No relay modifications are required. Only endpoint payload handling changes.
 * Sustained throughput: ~45–65 Mbps
 * Stable under moderate packet loss conditions
 
->* Note: Results are workload- and environment-dependent and are not guaranteed. iperf3 used for benchmarking unless otherwise stated
+>* Note: Results are workload and environment-dependent and are not guaranteed. iperf3 was used for benchmarking unless otherwise stated
 
 ---
 
@@ -194,7 +180,7 @@ This system does not provide anonymity guarantees. Traffic metadata such as timi
 
 ## Security Notice
 
-BastionRoute provides transport relaying only.
+BastionRoute provides transport relaying of UDP datagram binary streams over WebSocket using outbound initiated connections.
 Authentication, authorization, encryption, and access control remain the responsibility of the underlying data initiator configuration and deployment.
 
 ## Experimental Status
