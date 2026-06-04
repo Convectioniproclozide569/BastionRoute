@@ -79,7 +79,7 @@ func runServerPeerPipeline(ctx context.Context, relayURI, room, peerID string, w
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	// Stream 1: Go Relay (WS) ──► Core WireGuard (UDP)
+	// Stream 1: Go Relay (WS) ──► UDP Server (UDP)
 	go func() {
 		defer func() { cancel(); wg.Done() }()
 		for {
@@ -96,7 +96,7 @@ func runServerPeerPipeline(ctx context.Context, relayURI, room, peerID string, w
 		}
 	}()
 
-	// Stream 2: Core WireGuard (UDP) ──► Go Relay (WS)
+	// Stream 2: UDP Server ──► Go Relay (WS)
 	go func() {
 		defer func() { cancel(); wg.Done() }()
 		buffer := make([]byte, 65535)
@@ -219,7 +219,7 @@ func runClientPipeline(ctx context.Context, relayURI, room, peerID string, liste
 		log.Fatalf("[FATAL] Failed to resolve local listener constraints: %v", err)
 	}
 
-	// ListenUDP creates an open listening port that waits for the local WireGuard application to talk to it.
+	// ListenUDP creates an open listening port that waits for the local client application to talk to it.
 	udpConn, err := net.ListenUDP("udp", localAddr)
 	if err != nil {
 		log.Fatalf("[FATAL] Failed to open local listener socket: %v", err)
@@ -247,14 +247,14 @@ func runClientPipeline(ctx context.Context, relayURI, room, peerID string, liste
 		udpConn.Close()
 	}()
 
-	// We dynamically record the local WireGuard client app's port context once it fires its first packet
+	// We dynamically record the local client app's port context once it fires its first packet
 	var localAppAddr *net.UDPAddr
 	var addrLock sync.RWMutex
 
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	// Stream 1: Local WireGuard Application (UDP) ──► Go Relay (WS)
+	// Stream 1: Local client Application (UDP) ──► Go Relay (WS)
 	go func() {
 		defer func() { cancel(); wg.Done() }()
 		buffer := make([]byte, 65535)
@@ -276,7 +276,7 @@ func runClientPipeline(ctx context.Context, relayURI, room, peerID string, liste
 		}
 	}()
 
-	// Stream 2: Go Relay (WS) ──► Local WireGuard Application (UDP)
+	// Stream 2: Go Relay (WS) ──► Local client Application (UDP)
 	go func() {
 		defer func() { cancel(); wg.Done() }()
 		for {
@@ -314,7 +314,7 @@ func main() {
 	room := flag.String("room", "", "Unique Room Identifier string")
 	peerID := flag.String("peer-id", "", "Unique Peer Identification label (Required for client role)")
 	wgIP := flag.String("wg-ip", "127.0.0.1", "Backend host network destination or binding point")
-	wgPort := flag.Int("wg-port", 51820, "Target WireGuard mapping port element")
+	wgPort := flag.Int("wg-port", 51820, "Target Application mapping port element")
 	flag.Parse()
 
 	// Verify global constraint requirements
