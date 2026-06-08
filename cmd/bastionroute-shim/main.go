@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"log"
+	"math/big"
 	"net"
 	"net/url"
 	"os"
@@ -13,8 +15,6 @@ import (
 	"sync"
 	"syscall"
 	"time"
-	"crypto/rand"
-    "math/big"
 	"github.com/gorilla/websocket"
 )
 
@@ -213,132 +213,132 @@ func runServerControlPlane(ctx context.Context, relayURI, room string, wgIP stri
 // ============================================================================
 
 func runClientPipeline(ctx context.Context, relayURI, room, basePeerID string, listenIP string, listenPort int) {
-        log.Printf("[TUNNEL-CLIENT] Spinning up local listener interface on %s:%d...", listenIP, listenPort)
+    log.Printf("[TUNNEL-CLIENT] Spinning up local listener interface on %s:%d...", listenIP, listenPort)
 
-        localAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", listenIP, listenPort))
-        if err != nil {
-                log.Fatalf("[FATAL] Failed to resolve local listener constraints: %v", err)
-        }
+    localAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", listenIP, listenPort))
+    if err != nil {
+            log.Fatalf("[FATAL] Failed to resolve local listener constraints: %v", err)
+    }
 
-        udpConn, err := net.ListenUDP("udp", localAddr)
-        if err != nil {
-                log.Fatalf("[FATAL] Failed to open local listener socket: %v", err)
-        }
-        defer udpConn.Close()
+    udpConn, err := net.ListenUDP("udp", localAddr)
+    if err != nil {
+            log.Fatalf("[FATAL] Failed to open local listener socket: %v", err)
+    }
+    defer udpConn.Close()
 
         // Infinite loop handles drops and connection retries
-        for {
-                select {
-                case <-ctx.Done():
-                        log.Println("[TUNNEL-CLIENT] Stopping client pipeline due to context cancellation.")
-                        return
-                default:
-                }
+    for {
+            select {
+            case <-ctx.Done():
+                    log.Println("[TUNNEL-CLIENT] Stopping client pipeline due to context cancellation.")
+                    return
+            default:
+            }
 
                 // 1. Generate a cryptographically secure 6-digit random number (100000 - 999999)
-                nBig, err := rand.Int(rand.Reader, big.NewInt(900000))
-                if err != nil {
-                        log.Printf("[TUNNEL-CLIENT ERROR] Failed to generate random number: %v. Retrying...", err)
-                        time.Sleep(1 * time.Second)
-                        continue
-                }
-                randomToken := nBig.Int64() + 100000
+            nBig, err := rand.Int(rand.Reader, big.NewInt(900000))
+            if err != nil {
+                    log.Printf("[TUNNEL-CLIENT ERROR] Failed to generate random number: %v. Retrying...", err)
+                    time.Sleep(1 * time.Second)
+                    continue
+            }
+            randomToken := nBig.Int64() + 100000
 
                 // 2. Combine the base peerID with the new 6-digit random token
-                currentPeerID := fmt.Sprintf("%s-%d", basePeerID, randomToken)
+			currentPeerID := fmt.Sprintf("%s-%d", basePeerID, randomToken)
 
-                // 3. Re-build the fresh WebSocket URL route inside the loop
-                wsURL, err := getWebSocketURL(relayURI, fmt.Sprintf("/ws/%s/%s", room, currentPeerID))
-                if err != nil {
-                        log.Fatalf("[FATAL] Bad client route generation parameters: %v", err) // Kept fatal because bad URI structure won't fix itself
-                }
+			// 3. Re-build the fresh WebSocket URL route inside the loop
+			wsURL, err := getWebSocketURL(relayURI, fmt.Sprintf("/ws/%s/%s", room, currentPeerID))
+			if err != nil {
+					log.Fatalf("[FATAL] Bad client route generation parameters: %v", err) // Kept fatal because bad URI structure won't fix itself
+			}
 
-                log.Printf("[TUNNEL-CLIENT] Establishing outbound WebSocket proxy bridge to %s", wsURL)
-                wsConn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
-                if err != nil {
-                        log.Printf("[TUNNEL-CLIENT ERROR] Relay handshake connection failure for peer [%s]: %v. Retrying in 5s...", currentPeerID, err)
-                        time.Sleep(5 * time.Second)
-                        continue
-                }
+			log.Printf("[TUNNEL-CLIENT] Establishing outbound WebSocket proxy bridge to %s", wsURL)
+			wsConn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+			if err != nil {
+					log.Printf("[TUNNEL-CLIENT ERROR] Relay handshake connection failure for peer [%s]: %v. Retrying in 5s...", currentPeerID, err)
+					time.Sleep(5 * time.Second)
+					continue
+			}
 
-                log.Printf("[TUNNEL-CLIENT] Client shim routing pipeline fully operational for peer [%s].", currentPeerID)
+			log.Printf("[TUNNEL-CLIENT] Client shim routing pipeline fully operational for peer [%s].", currentPeerID)
 
-                // Lifecycle context for the running sockets
-                connCtx, cancelConn := context.WithCancel(ctx)
+			// Lifecycle context for the running sockets
+			connCtx, cancelConn := context.WithCancel(ctx)
 
-                go func() {
-                        <-connCtx.Done()
-                        wsConn.Close()
-                }()
+			go func() {
+					<-connCtx.Done()
+					wsConn.Close()
+			}()
 
-                var localAppAddr *net.UDPAddr
-                var addrLock sync.RWMutex
-                var wg sync.WaitGroup
-                wg.Add(2)
+			var localAppAddr *net.UDPAddr
+			var addrLock sync.RWMutex
+			var wg sync.WaitGroup
+			wg.Add(2)
 
-                // Stream 1: Local client Application (UDP) ──► Go Relay (WS)
-                go func() {
-                        defer func() { cancelConn(); wg.Done() }()
-                        buffer := make([]byte, 65535)
-                        for {
-                                _ = udpConn.SetReadDeadline(time.Now().Add(1 * time.Second))
-                                n, remoteAddr, err := udpConn.ReadFromUDP(buffer)
-                                if err != nil {
-                                        if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-                                                select {
-                                                case <-connCtx.Done():
-                                                        return
-                                                default:
-                                                        continue
-                                                }
-                                        }
-                                        return
-                                }
-                                if n > 0 {
-                                        addrLock.Lock()
-                                        localAppAddr = remoteAddr
-                                        addrLock.Unlock()
+			// Stream 1: Local client Application (UDP) ──► Go Relay (WS)
+			go func() {
+					defer func() { cancelConn(); wg.Done() }()
+					buffer := make([]byte, 65535)
+					for {
+							_ = udpConn.SetReadDeadline(time.Now().Add(1 * time.Second))
+							n, remoteAddr, err := udpConn.ReadFromUDP(buffer)
+							if err != nil {
+									if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+											select {
+											case <-connCtx.Done():
+													return
+											default:
+													continue
+											}
+									}
+									return
+							}
+							if n > 0 {
+									addrLock.Lock()
+									localAppAddr = remoteAddr
+									addrLock.Unlock()
 
-                                        err = wsConn.WriteMessage(websocket.BinaryMessage, buffer[:n])
-                                        if err != nil {
-                                                log.Printf("[TUNNEL-CLIENT WS WRITE ERROR]: %v", err)
-                                                return
-                                        }
-                                }
-                        }
-                }()
+									err = wsConn.WriteMessage(websocket.BinaryMessage, buffer[:n])
+									if err != nil {
+											log.Printf("[TUNNEL-CLIENT WS WRITE ERROR]: %v", err)
+											return
+									}
+							}
+					}
+			}()
 
-                // Stream 2: Go Relay (WS) ──► Local client Application (UDP)
-                go func() {
-                        defer func() { cancelConn(); wg.Done() }()
-                        for {
-                                msgType, payload, err := wsConn.ReadMessage()
-                                if err != nil {
-                                        log.Printf("[TUNNEL-CLIENT WS READ ERROR]: %v", err)
-                                        return
-                                }
-                                if msgType == websocket.BinaryMessage {
-                                        addrLock.RLock()
-                                        targetAddr := localAppAddr
-                                        addrLock.RUnlock()
+			// Stream 2: Go Relay (WS) ──► Local client Application (UDP)
+			go func() {
+					defer func() { cancelConn(); wg.Done() }()
+					for {
+							msgType, payload, err := wsConn.ReadMessage()
+							if err != nil {
+									log.Printf("[TUNNEL-CLIENT WS READ ERROR]: %v", err)
+									return
+							}
+							if msgType == websocket.BinaryMessage {
+									addrLock.RLock()
+									targetAddr := localAppAddr
+									addrLock.RUnlock()
 
-                                        if targetAddr != nil {
-                                                _ = udpConn.SetWriteDeadline(time.Now().Add(5 * time.Second))
-                                                _, err = udpConn.WriteToUDP(payload, targetAddr)
-                                                if err != nil {
-                                                        return
-                                                }
-                                        }
-                                }
-                        }
-                }()
+									if targetAddr != nil {
+											_ = udpConn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+											_, err = udpConn.WriteToUDP(payload, targetAddr)
+											if err != nil {
+													return
+											}
+									}
+							}
+					}
+			}()
 
-                wg.Wait()
-                cancelConn()
-                wsConn.Close()
+			wg.Wait()
+			cancelConn()
+			wsConn.Close()
 
-                log.Printf("[TUNNEL-CLIENT] Connection lost for peer [%s]. Rolling new peer ID and reconnecting in 3s...", currentPeerID)
-                time.Sleep(3 * time.Second)
+			log.Printf("[TUNNEL-CLIENT] Connection lost for peer [%s]. Rolling new peer ID and reconnecting in 3s...", currentPeerID)
+			time.Sleep(3 * time.Second)
         }
 }
 
