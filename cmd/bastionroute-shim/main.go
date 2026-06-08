@@ -287,9 +287,9 @@ func runClientPipeline(ctx context.Context, relayURI, room, basePeerID string, l
 					if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
 						select {
 							case <-connCtx.Done():
-							return
-						default:
-							continue
+								return
+							default:
+								continue
 						}
 					}
 					return
