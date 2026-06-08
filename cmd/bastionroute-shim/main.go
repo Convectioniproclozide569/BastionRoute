@@ -213,38 +213,38 @@ func runServerControlPlane(ctx context.Context, relayURI, room string, wgIP stri
 // ============================================================================
 
 func runClientPipeline(ctx context.Context, relayURI, room, basePeerID string, listenIP string, listenPort int) {
-    log.Printf("[TUNNEL-CLIENT] Spinning up local listener interface on %s:%d...", listenIP, listenPort)
+	log.Printf("[TUNNEL-CLIENT] Spinning up local listener interface on %s:%d...", listenIP, listenPort)
 
-    localAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", listenIP, listenPort))
-    if err != nil {
-            log.Fatalf("[FATAL] Failed to resolve local listener constraints: %v", err)
-    }
+	localAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", listenIP, listenPort))
+	if err != nil {
+			log.Fatalf("[FATAL] Failed to resolve local listener constraints: %v", err)
+	}
 
-    udpConn, err := net.ListenUDP("udp", localAddr)
-    if err != nil {
-            log.Fatalf("[FATAL] Failed to open local listener socket: %v", err)
-    }
-    defer udpConn.Close()
+	udpConn, err := net.ListenUDP("udp", localAddr)
+	if err != nil {
+			log.Fatalf("[FATAL] Failed to open local listener socket: %v", err)
+	}
+	defer udpConn.Close()
 
-        // Infinite loop handles drops and connection retries
-    for {
-            select {
-            case <-ctx.Done():
-                    log.Println("[TUNNEL-CLIENT] Stopping client pipeline due to context cancellation.")
-                    return
-            default:
-            }
+		// Infinite loop handles drops and connection retries
+	for {
+			select {
+			case <-ctx.Done():
+					log.Println("[TUNNEL-CLIENT] Stopping client pipeline due to context cancellation.")
+					return
+			default:
+			}
 
-                // 1. Generate a cryptographically secure 6-digit random number (100000 - 999999)
-            nBig, err := rand.Int(rand.Reader, big.NewInt(900000))
-            if err != nil {
-                    log.Printf("[TUNNEL-CLIENT ERROR] Failed to generate random number: %v. Retrying...", err)
-                    time.Sleep(1 * time.Second)
-                    continue
-            }
-            randomToken := nBig.Int64() + 100000
+				// 1. Generate a cryptographically secure 6-digit random number (100000 - 999999)
+			nBig, err := rand.Int(rand.Reader, big.NewInt(900000))
+			if err != nil {
+					log.Printf("[TUNNEL-CLIENT ERROR] Failed to generate random number: %v. Retrying...", err)
+					time.Sleep(1 * time.Second)
+					continue
+			}
+			randomToken := nBig.Int64() + 100000
 
-                // 2. Combine the base peerID with the new 6-digit random token
+				// 2. Combine the base peerID with the new 6-digit random token
 			currentPeerID := fmt.Sprintf("%s-%d", basePeerID, randomToken)
 
 			// 3. Re-build the fresh WebSocket URL route inside the loop
@@ -339,7 +339,7 @@ func runClientPipeline(ctx context.Context, relayURI, room, basePeerID string, l
 
 			log.Printf("[TUNNEL-CLIENT] Connection lost for peer [%s]. Rolling new peer ID and reconnecting in 3s...", currentPeerID)
 			time.Sleep(3 * time.Second)
-        }
+		}
 }
 
 // ============================================================================
